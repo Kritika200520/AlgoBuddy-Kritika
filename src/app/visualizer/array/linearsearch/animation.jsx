@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { gsap } from "gsap";
+
 import ResetButton from "@/app/components/ui/resetButton";
 import GoButton from "@/app/components/ui/goButton";
 import useVisualizerKeyboard from "@/app/hooks/useVisualizerKeyboard";
@@ -50,7 +50,6 @@ const LinearSearch = () => {
     setMessage("");
     setMessageType("");
   });
-  const elementRefs = useRef([]);
 
   const handleReset = () => {
     isSearchingRef.current = false;
@@ -68,22 +67,13 @@ const LinearSearch = () => {
     setArrayElements("");
     setTarget("");
     if (formRef.current) formRef.current.reset();
-
-    // Reset GSAP animations
-    elementRefs.current.forEach((ref) => {
-      gsap.to(ref, {
-        backgroundColor: "#E5E7EB",
-        borderColor: "#D1D5DB",
-        duration: 0,
-      });
-    });
   };
 
   const generateRandomArray = () => {
     if (isAnimating) return;
     const size = Math.floor(Math.random() * 4) + 2;
     const elements = Array.from({ length: size }, () =>
-      Math.floor(Math.random() * 100)
+      Math.floor(Math.random() * 100),
     );
     setArrayElements(elements.join(", "));
   };
@@ -112,12 +102,12 @@ const LinearSearch = () => {
 
     // FIX: also check target for decimal input
     if (target.includes(".")) {
-    setMessage("Only integers are supported. Please remove decimal values.");
-    setMessageType("warning");
-    return;
+      setMessage("Only integers are supported. Please remove decimal values.");
+      setMessageType("warning");
+      return;
     }
 
-const targetValue = parseInt(target);
+    const targetValue = parseInt(target);
 
     if (elements.some(isNaN) || isNaN(targetValue)) {
       setMessage("Invalid array elements or target.");
@@ -151,31 +141,19 @@ const targetValue = parseInt(target);
     for (const frame of generator) {
       if (!isSearchingRef.current) return;
 
-      if (frame.type === 'checking') {
+      if (frame.type === "checking") {
         setCurrentIndex(frame.index);
-        
-        // highlight current
-        elementRefs.current.forEach((ref, idx) => {
-          if (!ref) return;
-          if (idx === frame.index) {
-            gsap.to(ref, { backgroundColor: "#EAB308", borderColor: "#A16207", duration: 0.3 });
-          } else if (idx < frame.index) {
-            gsap.to(ref, { backgroundColor: "#93C5FD", borderColor: "#3B82F6", duration: 0.3 });
-          } else {
-            gsap.to(ref, { backgroundColor: "#E5E7EB", borderColor: "#D1D5DB", duration: 0.3 });
-          }
-        });
 
         await cancellableDelay();
-      } else if (frame.type === 'found') {
+      } else if (frame.type === "found") {
         setFoundIndex(frame.index);
         setMessage(`Element ${targetValue} found at index ${frame.index}!`);
         setMessageType("success"); // FIX: found → green
         setIsAnimating(false);
         isSearchingRef.current = false;
-        gsap.to(elementRefs.current[frame.index], { backgroundColor: "#22C55E", borderColor: "#15803D", duration: 0.3 });
+
         return;
-      } else if (frame.type === 'not_found') {
+      } else if (frame.type === "not_found") {
         setMessage(`Element ${targetValue} not found in the array.`);
         setMessageType("error"); // FIX: search result "not found" → red
         setIsAnimating(false);
@@ -184,7 +162,6 @@ const targetValue = parseInt(target);
       }
     }
   };
-
 
   useVisualizerKeyboard({
     onStart: () => {}, // Handled by Go button
@@ -201,13 +178,14 @@ const targetValue = parseInt(target);
     messageType === "success"
       ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
       : messageType === "warning"
-      ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
-      : "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200";
+        ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
+        : "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200";
 
   return (
     <main className="container mx-auto">
       <p className="text-lg text-center text-gray-600 dark:text-gray-400 mb-8">
-        Visualize how Linear Search works by sequentially checking each element in an array.
+        Visualize how Linear Search works by sequentially checking each element
+        in an array.
       </p>
 
       <form
@@ -216,7 +194,10 @@ const targetValue = parseInt(target);
         className="max-w-4xl mx-auto bg-white dark:bg-neutral-950 p-6 rounded-xl border border-gray-200 dark:border-gray-700 mb-8"
       >
         <div className="mb-4">
-          <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="arrayElements">
+          <label
+            className="block text-gray-700 dark:text-gray-300 mb-2"
+            htmlFor="arrayElements"
+          >
             Array Elements (comma-separated)
           </label>
           <div className="flex gap-2">
@@ -241,7 +222,10 @@ const targetValue = parseInt(target);
         </div>
 
         <div className="mb-4">
-          <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="target">
+          <label
+            className="block text-gray-700 dark:text-gray-300 mb-2"
+            htmlFor="target"
+          >
             Target Element
           </label>
 
@@ -257,7 +241,11 @@ const targetValue = parseInt(target);
             />
 
             <div className="flex gap-2 w-full">
-              <GoButton onClick={handleGo} isAnimating={isAnimating} disabled={isAnimating} />
+              <GoButton
+                onClick={handleGo}
+                isAnimating={isAnimating}
+                disabled={isAnimating}
+              />
               <ResetButton onReset={handleReset} isAnimating={isAnimating} />
             </div>
           </div>
@@ -274,32 +262,37 @@ const targetValue = parseInt(target);
       </form>
 
       {message && (
-        <div className={`max-w-3xl mx-auto mb-8 p-4 rounded-lg ${messageClass}`}>
+        <div
+          className={`max-w-3xl mx-auto mb-8 p-4 rounded-lg ${messageClass}`}
+        >
           <p className="text-center font-medium">{message}</p>
         </div>
       )}
 
       {array.length > 0 && (
         <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 text-center">Array Visualization</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 text-center">
+            Array Visualization
+          </h2>
           <div className="flex flex-wrap gap-4 justify-center">
             {array.map((element, index) => (
               <div key={index} className="flex flex-col items-center">
                 <div
-                  ref={(el) => (elementRefs.current[index] = el)}
                   className={`w-16 h-16 flex items-center justify-center rounded-lg border-2 transition-all duration-300 ${getFontSize(element)} font-medium ${
                     foundIndex === index
                       ? "bg-green-500 dark:bg-green-600 border-green-700 dark:border-green-400 text-gray-800 dark:text-white"
                       : currentIndex === index && foundIndex === -1
-                      ? "bg-yellow-500 dark:bg-yellow-600 border-yellow-700 dark:border-yellow-400 text-gray-800 dark:text-white"
-                      : index < currentIndex
-                      ? "bg-[#c27cf7] dark:bg-blue-700 border-primary dark:border-primary/80 text-gray-800 dark:text-white"
-                      : "bg-gray-200 dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white"
+                        ? "bg-yellow-500 dark:bg-yellow-600 border-yellow-700 dark:border-yellow-400 text-gray-800 dark:text-white"
+                        : index < currentIndex
+                          ? "bg-[#c27cf7] dark:bg-blue-700 border-primary dark:border-primary/80 text-gray-800 dark:text-white"
+                          : "bg-gray-200 dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white"
                   }`}
                 >
                   {element}
                 </div>
-                <div className="mt-1 text-sm text-gray-600 dark:text-gray-400 text-center">[{index}]</div>
+                <div className="mt-1 text-sm text-gray-600 dark:text-gray-400 text-center">
+                  [{index}]
+                </div>
               </div>
             ))}
           </div>

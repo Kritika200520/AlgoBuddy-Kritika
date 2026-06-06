@@ -1,10 +1,14 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { gsap } from "gsap";
+
 import { Play, Pause } from "lucide-react";
 import ResetButton from "@/app/components/ui/resetButton";
 import GoButton from "@/app/components/ui/goButton";
-import { saveToStorage, loadFromStorage, removeFromStorage } from "@/utils/storage";
+import {
+  saveToStorage,
+  loadFromStorage,
+  removeFromStorage,
+} from "@/utils/storage";
 import useVisualizerKeyboard from "@/app/hooks/useVisualizerKeyboard";
 import usePlayback from "@/app/hooks/usePlayback";
 import PlaybackControls from "@/app/components/ui/PlaybackControls";
@@ -20,10 +24,10 @@ const getFontSize = (value) => {
 
 const BinarySearch = () => {
   const [arrayElements, setArrayElements] = useState(() =>
-    loadFromStorage("binary-array-elements", "")
+    loadFromStorage("binary-array-elements", ""),
   );
   const [target, setTarget] = useState(() =>
-    loadFromStorage("binary-target", "")
+    loadFromStorage("binary-target", ""),
   );
   const [array, setArray] = useState([]);
   const [i, setI] = useState(-1);
@@ -53,10 +57,13 @@ const BinarySearch = () => {
   const resolveRef = useRef(null);
   const isSearchingRef = useRef(false);
   const formRef = useRef(null);
-  const elementRefs = useRef([]);
 
-  useEffect(() => { saveToStorage("binary-array-elements", arrayElements); }, [arrayElements]);
-  useEffect(() => { saveToStorage("binary-target", target); }, [target]);
+  useEffect(() => {
+    saveToStorage("binary-array-elements", arrayElements);
+  }, [arrayElements]);
+  useEffect(() => {
+    saveToStorage("binary-target", target);
+  }, [target]);
   useEffect(() => {
     saveToStorage("binary-speed", speed);
     speedRef.current = speed;
@@ -72,23 +79,29 @@ const BinarySearch = () => {
     removeFromStorage("binary-array-elements");
     removeFromStorage("binary-target");
     removeFromStorage("binary-speed");
-    setArray([]); setI(-1); setJ(-1); setMid(-1); setFoundIndex(-1);
-    setMessage(""); setMessageType(""); setStepExplanation(""); setStepCount(0);
-    setIsAnimating(false); 
+    setArray([]);
+    setI(-1);
+    setJ(-1);
+    setMid(-1);
+    setFoundIndex(-1);
+    setMessage("");
+    setMessageType("");
+    setStepExplanation("");
+    setStepCount(0);
+    setIsAnimating(false);
     setAutoSort(false);
     setShowAutoSort(false);
-    setArrayElements(""); setTarget(""); setSpeed(1);
+    setArrayElements("");
+    setTarget("");
+    setSpeed(1);
     if (formRef.current) formRef.current.reset();
-    elementRefs.current.forEach((ref) => {
-      if (ref) gsap.to(ref, { backgroundColor: "#E5E7EB", borderColor: "#D1D5DB", duration: 0 });
-    });
   };
 
   const generateRandomArray = () => {
     if (isAnimating) return;
     const size = Math.floor(Math.random() * 6) + 5;
     const elements = Array.from({ length: size }, () =>
-      Math.floor(Math.random() * 100)
+      Math.floor(Math.random() * 100),
     ).sort((a, b) => a - b);
     setArrayElements(elements.join(", "));
   };
@@ -96,7 +109,10 @@ const BinarySearch = () => {
   const cancellableDelay = async (multiplier = 1) => {
     await new Promise((resolve) => {
       resolveRef.current = resolve;
-      animationRef.current = setTimeout(resolve, (1500 / speedRef.current) * multiplier);
+      animationRef.current = setTimeout(
+        resolve,
+        (1500 / speedRef.current) * multiplier,
+      );
     });
     await checkPause();
   };
@@ -108,57 +124,42 @@ const BinarySearch = () => {
     for (const frame of generator) {
       if (!isSearchingRef.current) return;
 
-      if (frame.type === 'checking') {
+      if (frame.type === "checking") {
         setI(frame.l);
         setJ(frame.h);
         setMid(frame.m);
         setStepCount(frame.step);
         setStepExplanation(
-          `Step ${frame.step}: low=${frame.l}, high=${frame.h} → mid = ⌊(${frame.l} + ${frame.h}) / 2⌋ = ${frame.m}. Comparing arr[${frame.m}] = ${frame.arrM} with target ${targetValue}.`
+          `Step ${frame.step}: low=${frame.l}, high=${frame.h} → mid = ⌊(${frame.l} + ${frame.h}) / 2⌋ = ${frame.m}. Comparing arr[${frame.m}] = ${frame.arrM} with target ${targetValue}.`,
         );
 
-        elementRefs.current.forEach((ref, index) => {
-          if (!ref) return;
-          if (index === frame.m) {
-            gsap.to(ref, { backgroundColor: "#EAB308", borderColor: "#A16207", duration: 0.3 });
-          } else if (index >= frame.l && index <= frame.h) {
-            gsap.to(ref, { backgroundColor: "#93C5FD", borderColor: "#3B82F6", duration: 0.3 });
-          } else {
-            gsap.to(ref, { backgroundColor: "#E5E7EB", borderColor: "#D1D5DB", duration: 0.3 });
-          }
-        });
-
         await cancellableDelay(1);
-      } else if (frame.type === 'found') {
+      } else if (frame.type === "found") {
         setFoundIndex(frame.m);
         setMessage(`Element ${targetValue} found at index ${frame.m}!`);
         setMessageType("success");
         setStepExplanation(
-          `✓ arr[${frame.m}] = ${targetValue} equals target ${targetValue}. Found at index ${frame.m} after ${frame.step} step${frame.step > 1 ? "s" : ""}!`
+          `✓ arr[${frame.m}] = ${targetValue} equals target ${targetValue}. Found at index ${frame.m} after ${frame.step} step${frame.step > 1 ? "s" : ""}!`,
         );
         setIsAnimating(false);
         isSearchingRef.current = false;
-        gsap.to(elementRefs.current[frame.m], {
-          backgroundColor: "#22C55E",
-          borderColor: "#15803D",
-          duration: 0.3,
-        });
+
         return;
-      } else if (frame.type === 'discard_left') {
+      } else if (frame.type === "discard_left") {
         setStepExplanation(
-          `arr[${frame.m}] = ${processedElements[frame.m]} < target ${targetValue} → target is in the RIGHT half. Discard left side. New low = ${frame.m + 1}.`
+          `arr[${frame.m}] = ${processedElements[frame.m]} < target ${targetValue} → target is in the RIGHT half. Discard left side. New low = ${frame.m + 1}.`,
         );
         await cancellableDelay(0.6);
-      } else if (frame.type === 'discard_right') {
+      } else if (frame.type === "discard_right") {
         setStepExplanation(
-          `arr[${frame.m}] = ${processedElements[frame.m]} > target ${targetValue} → target is in the LEFT half. Discard right side. New high = ${frame.m - 1}.`
+          `arr[${frame.m}] = ${processedElements[frame.m]} > target ${targetValue} → target is in the LEFT half. Discard right side. New high = ${frame.m - 1}.`,
         );
         await cancellableDelay(0.6);
-      } else if (frame.type === 'not_found') {
+      } else if (frame.type === "not_found") {
         setMessage(`Element ${targetValue} not found in the array.`);
         setMessageType("error");
         setStepExplanation(
-          `Search range exhausted (low > high). The element ${targetValue} does not exist in this array.`
+          `Search range exhausted (low > high). The element ${targetValue} does not exist in this array.`,
         );
         setIsAnimating(false);
         isSearchingRef.current = false;
@@ -194,7 +195,7 @@ const BinarySearch = () => {
     }
 
     const isSorted = elements.every(
-      (el, idx) => idx === 0 || el >= elements[idx - 1]
+      (el, idx) => idx === 0 || el >= elements[idx - 1],
     );
 
     if (!isSorted && !autoSort) {
@@ -206,7 +207,7 @@ const BinarySearch = () => {
 
     let processedElements = [...elements];
 
-    if (!isSorted && autoSort) {  
+    if (!isSorted && autoSort) {
       processedElements.sort((a, b) => a - b);
       setArrayElements(processedElements.join(", "));
       setShowAutoSort(false);
@@ -216,18 +217,22 @@ const BinarySearch = () => {
     setI(0);
     setJ(processedElements.length - 1);
     setIsAnimating(true);
-    
+
     animateBinarySearch(processedElements, targetValue);
   };
 
   const togglePlayPauseRef = useRef(togglePlayPause);
-  useEffect(() => { togglePlayPauseRef.current = togglePlayPause; }, [togglePlayPause]);
+  useEffect(() => {
+    togglePlayPauseRef.current = togglePlayPause;
+  }, [togglePlayPause]);
 
   const isAnimatingRef = useRef(isAnimating);
   useVisualizerReset(() => {
     handleReset();
   });
-  useEffect(() => { isAnimatingRef.current = isAnimating; }, [isAnimating]);
+  useEffect(() => {
+    isAnimatingRef.current = isAnimating;
+  }, [isAnimating]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -245,17 +250,31 @@ const BinarySearch = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const getElementClass = (index) => {
+    if (foundIndex === index) {
+      return "bg-green-500 dark:bg-green-600 border-green-700 dark:border-green-400 text-gray-800 dark:text-white";
+    }
+    if (mid === index && foundIndex === -1) {
+      return "bg-yellow-500 dark:bg-yellow-600 border-yellow-700 dark:border-yellow-400 text-gray-800 dark:text-white";
+    }
+    if (index >= i && index <= j && foundIndex === -1) {
+      return "bg-[#c27cf7] dark:bg-blue-700 border-primary dark:border-primary/80 text-gray-800 dark:text-white";
+    }
+    return "bg-gray-200 dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white";
+  };
+
   const messageClass =
     messageType === "success"
       ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
       : messageType === "warning"
-      ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
-      : "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200";
+        ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
+        : "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200";
 
   return (
     <main className="container mx-auto">
       <p className="text-lg text-center text-gray-600 dark:text-gray-400 mb-8">
-        Visualize how Binary Search efficiently finds an element in a sorted array.
+        Visualize how Binary Search efficiently finds an element in a sorted
+        array.
       </p>
       <form
         ref={formRef}
@@ -263,7 +282,10 @@ const BinarySearch = () => {
         className="max-w-4xl mx-auto bg-white dark:bg-neutral-950 p-6 rounded-xl border border-gray-200 dark:border-gray-700 mb-8"
       >
         <div className="mb-4">
-          <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="arrayElements">
+          <label
+            className="block text-gray-700 dark:text-gray-300 mb-2"
+            htmlFor="arrayElements"
+          >
             Sorted Array Elements (comma-separated)
           </label>
           <div className="flex gap-2">
@@ -287,7 +309,10 @@ const BinarySearch = () => {
           </div>
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="target">
+          <label
+            className="block text-gray-700 dark:text-gray-300 mb-2"
+            htmlFor="target"
+          >
             Target Element
           </label>
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
@@ -301,7 +326,11 @@ const BinarySearch = () => {
               disabled={isAnimating}
             />
             <div className="flex gap-2 w-full">
-              <GoButton onClick={handleGo} isAnimating={isAnimating} disabled={isAnimating} />
+              <GoButton
+                onClick={handleGo}
+                isAnimating={isAnimating}
+                disabled={isAnimating}
+              />
               <ResetButton onReset={handleReset} isAnimating={isAnimating} />
             </div>
           </div>
@@ -322,7 +351,9 @@ const BinarySearch = () => {
                 onClick={decreaseSpeed}
                 className="bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-lg transition-colors shadow-sm"
                 disabled={speed <= 0.5}
-              >-</button>
+              >
+                -
+              </button>
               <span className="text-gray-700 dark:text-gray-300 font-medium min-w-[80px] text-center">
                 Speed: {speed}x
               </span>
@@ -331,14 +362,18 @@ const BinarySearch = () => {
                 onClick={increaseSpeed}
                 className="bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-lg transition-colors shadow-sm"
                 disabled={speed >= 5}
-              >+</button>
+              >
+                +
+              </button>
             </div>
           </div>
         )}
       </form>
 
       {message && (
-        <div className={`max-w-3xl mx-auto mb-8 p-4 rounded-lg ${messageClass}`}>
+        <div
+          className={`max-w-3xl mx-auto mb-8 p-4 rounded-lg ${messageClass}`}
+        >
           <p className="text-center font-medium">{message}</p>
 
           {showAutoSort && (
@@ -377,10 +412,26 @@ const BinarySearch = () => {
                 </p>
               </div>
               <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
-                <span><span className="font-semibold text-yellow-600 dark:text-yellow-400">■ Yellow</span> = mid index</span>
-                <span><span className="font-semibold text-primary dark:text-[#c27cf7]">■ Blue</span> = active search range</span>
-                <span><span className="font-semibold text-gray-400">■ Gray</span> = eliminated</span>
-                <span><span className="font-semibold text-green-500">■ Green</span> = found</span>
+                <span>
+                  <span className="font-semibold text-yellow-600 dark:text-yellow-400">
+                    ■ Yellow
+                  </span>{" "}
+                  = mid index
+                </span>
+                <span>
+                  <span className="font-semibold text-primary dark:text-[#c27cf7]">
+                    ■ Blue
+                  </span>{" "}
+                  = active search range
+                </span>
+                <span>
+                  <span className="font-semibold text-gray-400">■ Gray</span> =
+                  eliminated
+                </span>
+                <span>
+                  <span className="font-semibold text-green-500">■ Green</span>{" "}
+                  = found
+                </span>
               </div>
             </div>
           )}
@@ -397,8 +448,7 @@ const BinarySearch = () => {
                 return (
                   <div key={index} className="flex flex-col items-center">
                     <div
-                      ref={(el) => (elementRefs.current[index] = el)}
-                      className={`w-16 h-16 flex items-center justify-center rounded-lg border-2 transition-all duration-300 ${getFontSize(element)} font-medium`}
+                      className={`w-16 h-16 flex items-center justify-center rounded-lg border-2 transition-all duration-300 ${getFontSize(element)} font-medium ${getElementClass(index)}`}
                     >
                       {element}
                     </div>
@@ -410,14 +460,16 @@ const BinarySearch = () => {
                             label === "mid"
                               ? "text-yellow-600 dark:text-yellow-400 font-semibold"
                               : label === "low" || label === "high"
-                              ? "text-primary dark:text-[#c27cf7] font-semibold"
-                              : ""
+                                ? "text-primary dark:text-[#c27cf7] font-semibold"
+                                : ""
                           }
                         >
                           {label}
                         </div>
                       ))}
-                      <div className="text-gray-400 dark:text-gray-600 text-[10px]">[{index}]</div>
+                      <div className="text-gray-400 dark:text-gray-600 text-[10px]">
+                        [{index}]
+                      </div>
                     </div>
                   </div>
                 );
